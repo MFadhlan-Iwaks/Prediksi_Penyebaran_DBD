@@ -1,13 +1,2 @@
-keterangan,nilai
-tahun_simulasi,2024.0
-total_populasi_N,51316378.0
-S0,51316210.17759563
-I0,167.8224043715847
-R0,0.0
-beta,0.3
-gamma,0.14285714285714285
-h,1.0
-t_max,150.0
-puncak_infeksi_maksimum,9070212.526092948
-hari_puncak_infeksi,86.0
-hari_status_siaga,72.0
+tahun_simulasi,N,S0,I0,R0,beta,gamma,h,t_max,infected_maksimum,hari_puncak,warning_window,hari_siaga,waktu_komputasi_detik
+2024,51316378.0,51316210.17759563,167.8224043715847,0.0,0.3,0.14285714285714285,1,150,9070212.526092948,86.0,14,72.0,0.0014426999987335876

@@ -1,0 +1,2 @@
+tahun_simulasi,N,S0,I0,R0,beta,gamma,h,t_max,warning_window,sumber_I0,catatan_dataset
+2024,51316378.0,51316210.17759563,167.8224043715847,0.0,0.3,0.14285714285714285,1,150,14,I0_rekomendasi dari dataset agregat tahun 2024,"Dataset harian merupakan estimasi dari data tahunan 2016-2024, bukan observasi harian aktual."

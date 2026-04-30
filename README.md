@@ -45,6 +45,23 @@ Data 2016-2024 digunakan sebagai data historis. Simulasi utama menggunakan tahun
 
 Catatan penting: dataset harian merupakan hasil estimasi dari data tahunan 2016-2024, bukan data observasi harian aktual.
 
+## Populasi Efektif Simulasi
+
+Jumlah penduduk asli Jawa Barat tetap dibaca dari dataset, tetapi tidak langsung digunakan sebagai `N` utama pada model SIR. Program menggunakan pendekatan populasi efektif berbasis incidence rate DBD tahun 2024:
+
+```text
+N_efektif = (IR / 100000) x jumlah penduduk asli
+```
+
+Incidence Rate 2024 yang digunakan adalah `119.69` per 100.000 penduduk. Pendekatan ini digunakan agar simulasi tidak mengasumsikan seluruh penduduk Jawa Barat sebagai populasi rentan aktif.
+
+Dengan pendekatan ini:
+
+- `jumlah_penduduk_asli` digunakan sebagai dasar perhitungan.
+- `N_efektif` digunakan sebagai populasi simulasi model SIR.
+- `I0` dan `R0` tetap diambil dari rekomendasi dataset tahun 2024.
+- `S0` dihitung ulang dengan rumus `S0 = N_efektif - I0 - R0`.
+
 ## Model SIR
 
 Model SIR membagi populasi menjadi tiga kompartemen:
@@ -81,8 +98,9 @@ Simulasi dilakukan secara harian dengan `h = 1` hari untuk skenario utama.
 - `h = 1`
 - `t_max = 150`
 - `warning_window = 14`
+- `incidence_rate_2024 = 119.69`
 
-Nilai awal `N`, `S0`, `I0`, dan `R0` diambil dari dataset tahun 2024.
+Nilai awal `I0` dan `R0` diambil dari dataset tahun 2024. Nilai `N` model SIR menggunakan populasi efektif, sedangkan `S0` dihitung dari `N_efektif - I0 - R0`.
 
 ## Output Program
 

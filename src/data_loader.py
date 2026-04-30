@@ -5,9 +5,23 @@ from pathlib import Path
 import pandas as pd
 
 try:
-    from .config import MAIN_DATASET_PATH, REQUIRED_MAIN_COLUMNS, YEARLY_SUMMARY_PATH, YEAR_SIMULATION
+    from .config import (
+        INCIDENCE_RATE_2024,
+        MAIN_DATASET_PATH,
+        REQUIRED_MAIN_COLUMNS,
+        USE_EFFECTIVE_POPULATION,
+        YEARLY_SUMMARY_PATH,
+        YEAR_SIMULATION,
+    )
 except ImportError:
-    from config import MAIN_DATASET_PATH, REQUIRED_MAIN_COLUMNS, YEARLY_SUMMARY_PATH, YEAR_SIMULATION
+    from config import (
+        INCIDENCE_RATE_2024,
+        MAIN_DATASET_PATH,
+        REQUIRED_MAIN_COLUMNS,
+        USE_EFFECTIVE_POPULATION,
+        YEARLY_SUMMARY_PATH,
+        YEAR_SIMULATION,
+    )
 
 
 def validate_required_columns(data: pd.DataFrame, required_columns: list[str]) -> None:
@@ -72,8 +86,8 @@ def load_yearly_summary(
 
 def get_simulation_initial_values(
     data: pd.DataFrame, year: int = YEAR_SIMULATION
-) -> tuple[float, float, float, float]:
-    """Mengambil N, S0, I0, dan R0 untuk tahun simulasi."""
+) -> tuple[float, float, float, float, float, float, float]:
+    """Mengambil nilai awal simulasi dengan pendekatan populasi efektif."""
     year_data = data[data["tahun"] == year].copy()
     if year_data.empty:
         raise ValueError(f"Data tahun {year} tidak ditemukan pada dataset utama.")
@@ -82,9 +96,19 @@ def get_simulation_initial_values(
         year_data = year_data.sort_values("tanggal")
 
     first_row = year_data.iloc[0]
-    n = float(first_row["jumlah_penduduk_N"])
-    s0 = float(first_row["S0_rekomendasi"])
+    n_asli = float(first_row["jumlah_penduduk_N"])
+    incidence_rate = INCIDENCE_RATE_2024
+    n_efektif = (incidence_rate / 100000) * n_asli
+    n = n_efektif if USE_EFFECTIVE_POPULATION else n_asli
     i0 = float(first_row["I0_rekomendasi"])
     r0 = float(first_row["R0_rekomendasi"])
+    s0 = n - i0 - r0
 
-    return n, s0, i0, r0
+    if s0 < 0:
+        raise ValueError(
+            "Nilai awal tidak valid: S0 bernilai negatif. "
+            f"N_simulasi={n:.2f}, I0={i0:.2f}, R0={r0:.2f}. "
+            "Periksa incidence rate atau nilai awal I0/R0."
+        )
+
+    return n_asli, incidence_rate, n_efektif, n, s0, i0, r0

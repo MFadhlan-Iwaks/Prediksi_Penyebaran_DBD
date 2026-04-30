@@ -95,13 +95,24 @@ def run_simulation(
     return simulation_df, elapsed_time
 
 
-def save_parameter_table(N: float, S0: float, I0: float, R0: float) -> None:
+def save_parameter_table(
+    N_asli: float,
+    incidence_rate: float,
+    N_efektif: float,
+    N: float,
+    S0: float,
+    I0: float,
+    R0: float,
+) -> None:
     """Menyimpan parameter simulasi utama tahun 2024."""
     parameter_df = pd.DataFrame(
         [
             {
                 "tahun_simulasi": YEAR_SIMULATION,
-                "N": N,
+                "jumlah_penduduk_asli": N_asli,
+                "incidence_rate_2024": incidence_rate,
+                "N_efektif": N_efektif,
+                "N_simulasi": N,
                 "S0": S0,
                 "I0": I0,
                 "R0": R0,
@@ -112,8 +123,9 @@ def save_parameter_table(N: float, S0: float, I0: float, R0: float) -> None:
                 "warning_window": WARNING_WINDOW,
                 "sumber_I0": "I0_rekomendasi dari dataset agregat tahun 2024",
                 "catatan_dataset": (
-                    "Dataset harian merupakan estimasi dari data tahunan 2016-2024, "
-                    "bukan observasi harian aktual."
+                    "Dataset harian merupakan estimasi dari data tahunan 2016-2024. "
+                    "Populasi simulasi menggunakan populasi efektif berbasis incidence rate, "
+                    "bukan seluruh penduduk Jawa Barat."
                 ),
             }
         ]
@@ -122,6 +134,9 @@ def save_parameter_table(N: float, S0: float, I0: float, R0: float) -> None:
 
 
 def save_main_summary(
+    N_asli: float,
+    incidence_rate: float,
+    N_efektif: float,
     N: float,
     S0: float,
     I0: float,
@@ -134,7 +149,10 @@ def save_main_summary(
         [
             {
                 "tahun_simulasi": YEAR_SIMULATION,
-                "N": N,
+                "jumlah_penduduk_asli": N_asli,
+                "incidence_rate_2024": incidence_rate,
+                "N_efektif": N_efektif,
+                "N_simulasi": N,
                 "S0": S0,
                 "I0": I0,
                 "R0": R0,
@@ -243,6 +261,9 @@ def run_gamma_sensitivity_test(N: float, S0: float, I0: float, R0: float) -> Non
 
 
 def print_terminal_summary(
+    N_asli: float,
+    incidence_rate: float,
+    N_efektif: float,
     N: float,
     S0: float,
     I0: float,
@@ -257,7 +278,10 @@ def print_terminal_summary(
 
     print("=== Simulasi SIR DBD Jawa Barat ===")
     print(f"Tahun simulasi          : {YEAR_SIMULATION}")
-    print(f"Total populasi (N)      : {N:,.0f}")
+    print(f"Penduduk asli Jawa Barat: {N_asli:,.0f}")
+    print(f"Incidence Rate 2024     : {incidence_rate:.2f} per 100.000 penduduk")
+    print(f"Populasi efektif        : {N_efektif:,.2f}")
+    print(f"N simulasi              : {N:,.2f}")
     print(f"Nilai awal S0           : {S0:,.2f}")
     print(f"Nilai awal I0           : {I0:,.2f}")
     print(f"Nilai awal R0           : {R0:,.2f}")
@@ -287,14 +311,26 @@ def main() -> None:
         yearly_summary = load_yearly_summary(data)
         yearly_summary.to_csv(HISTORICAL_SUMMARY_OUTPUT_PATH, index=False)
 
-        N, S0, I0, R0 = get_simulation_initial_values(data, YEAR_SIMULATION)
-        save_parameter_table(N, S0, I0, R0)
+        N_asli, incidence_rate, N_efektif, N, S0, I0, R0 = get_simulation_initial_values(
+            data, YEAR_SIMULATION
+        )
+        save_parameter_table(N_asli, incidence_rate, N_efektif, N, S0, I0, R0)
 
         simulation_df, elapsed_time = run_simulation(N, S0, I0, R0, BETA, GAMMA, H, T_MAX)
         simulation_df.to_csv(SIR_OUTPUT_PATH, index=False)
 
         warning_result = calculate_early_warning(simulation_df, WARNING_WINDOW)
-        save_main_summary(N, S0, I0, R0, warning_result, elapsed_time)
+        save_main_summary(
+            N_asli,
+            incidence_rate,
+            N_efektif,
+            N,
+            S0,
+            I0,
+            R0,
+            warning_result,
+            elapsed_time,
+        )
 
         plot_sir(simulation_df, SIR_FIGURE_PATH)
         plot_case_trend(yearly_summary, CASE_TREND_FIGURE_PATH)
@@ -303,7 +339,17 @@ def main() -> None:
         run_beta_sensitivity_test(N, S0, I0, R0)
         run_gamma_sensitivity_test(N, S0, I0, R0)
 
-        print_terminal_summary(N, S0, I0, R0, warning_result, elapsed_time)
+        print_terminal_summary(
+            N_asli,
+            incidence_rate,
+            N_efektif,
+            N,
+            S0,
+            I0,
+            R0,
+            warning_result,
+            elapsed_time,
+        )
 
     except (FileNotFoundError, ValueError) as error:
         print(f"Error: {error}")

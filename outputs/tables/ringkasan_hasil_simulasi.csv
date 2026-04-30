@@ -1,2 +1,2 @@
-tahun_simulasi,N,S0,I0,R0,beta,gamma,h,t_max,infected_maksimum,hari_puncak,warning_window,hari_siaga,waktu_komputasi_detik
-2024,51316378.0,51316210.17759563,167.8224043715847,0.0,0.3,0.14285714285714285,1,150,9070212.526092948,86.0,14,72.0,0.0014426999987335876
+tahun_simulasi,jumlah_penduduk_asli,incidence_rate_2024,N_efektif,N_simulasi,S0,I0,R0,beta,gamma,h,t_max,infected_maksimum,hari_puncak,warning_window,hari_siaga,waktu_komputasi_detik
+2024,51316378.0,119.69,61420.57282819999,61420.57282819999,61252.75042382841,167.8224043715847,0.0,0.3,0.14285714285714285,1,150,10946.487218990853,39.0,14,25.0,0.00044189998880028725

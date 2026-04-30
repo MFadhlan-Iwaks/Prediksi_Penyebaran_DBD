@@ -1,18 +1,22 @@
 """Perhitungan parameter sistem peringatan dini."""
 
-from typing import Tuple
-
 import pandas as pd
 
 
-def calculate_early_warning(simulation_result: pd.DataFrame) -> Tuple[float, int, int]:
-    """Mencari puncak infeksi, hari puncak, dan hari siaga."""
-    if "I" not in simulation_result.columns or "hari" not in simulation_result.columns:
+def calculate_early_warning(
+    simulation_df: pd.DataFrame, warning_window: int
+) -> dict[str, float]:
+    """Mencari infected maksimum, hari puncak, dan hari siaga."""
+    if "I" not in simulation_df.columns or "hari" not in simulation_df.columns:
         raise ValueError("Data simulasi harus memiliki kolom 'hari' dan 'I'.")
 
-    peak_index = simulation_result["I"].idxmax()
-    max_infection = float(simulation_result.loc[peak_index, "I"])
-    peak_day = int(simulation_result.loc[peak_index, "hari"])
-    warning_day = max(peak_day - 14, 0)
+    peak_index = simulation_df["I"].idxmax()
+    infected_maksimum = float(simulation_df.loc[peak_index, "I"])
+    hari_puncak = float(simulation_df.loc[peak_index, "hari"])
+    hari_siaga = max(hari_puncak - warning_window, 0)
 
-    return max_infection, peak_day, warning_day
+    return {
+        "infected_maksimum": infected_maksimum,
+        "hari_puncak": hari_puncak,
+        "hari_siaga": hari_siaga,
+    }

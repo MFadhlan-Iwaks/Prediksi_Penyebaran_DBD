@@ -1,17 +1,16 @@
 """Fungsi untuk membaca dan memvalidasi dataset DBD."""
 
 from pathlib import Path
-from typing import Tuple
 
 import pandas as pd
 
 try:
-    from .config import MAIN_DATASET_PATH, REQUIRED_MAIN_COLUMNS, SIMULATION_YEAR
+    from .config import MAIN_DATASET_PATH, REQUIRED_MAIN_COLUMNS, YEARLY_SUMMARY_PATH, YEAR_SIMULATION
 except ImportError:
-    from config import MAIN_DATASET_PATH, REQUIRED_MAIN_COLUMNS, SIMULATION_YEAR
+    from config import MAIN_DATASET_PATH, REQUIRED_MAIN_COLUMNS, YEARLY_SUMMARY_PATH, YEAR_SIMULATION
 
 
-def validate_columns(data: pd.DataFrame, required_columns: list[str]) -> None:
+def validate_required_columns(data: pd.DataFrame, required_columns: list[str]) -> None:
     """Memastikan semua kolom wajib tersedia di dataset."""
     missing_columns = [column for column in required_columns if column not in data.columns]
     if missing_columns:
@@ -24,11 +23,11 @@ def load_processed_dataset(file_path: Path = MAIN_DATASET_PATH) -> pd.DataFrame:
     if not file_path.exists():
         raise FileNotFoundError(
             f"Dataset utama tidak ditemukan: {file_path}. "
-            "Pastikan file CSV sudah tersedia di folder data/processed."
+            "Pastikan file CSV tersedia di folder data/processed."
         )
 
     data = pd.read_csv(file_path)
-    validate_columns(data, REQUIRED_MAIN_COLUMNS)
+    validate_required_columns(data, REQUIRED_MAIN_COLUMNS)
 
     numeric_columns = [
         "tahun",
@@ -44,14 +43,36 @@ def load_processed_dataset(file_path: Path = MAIN_DATASET_PATH) -> pd.DataFrame:
         data[column] = pd.to_numeric(data[column], errors="coerce")
 
     if data[numeric_columns].isna().any().any():
-        raise ValueError("Dataset memiliki nilai numerik kosong/tidak valid pada kolom wajib.")
+        raise ValueError("Dataset memiliki nilai numerik kosong atau tidak valid pada kolom wajib.")
 
     return data
 
 
+def load_yearly_summary(
+    daily_data: pd.DataFrame,
+    file_path: Path = YEARLY_SUMMARY_PATH,
+) -> pd.DataFrame:
+    """Membaca ringkasan tahunan jika ada, atau membuatnya dari dataset harian estimasi."""
+    if file_path.exists():
+        summary = pd.read_csv(file_path)
+        validate_required_columns(summary, ["tahun"])
+        return summary
+
+    return (
+        daily_data.groupby("tahun", as_index=False)
+        .agg(
+            jumlah_penduduk_N=("jumlah_penduduk_N", "first"),
+            total_kasus=("estimasi_kasus_harian", "sum"),
+            total_meninggal=("estimasi_meninggal_harian", "sum"),
+            total_sembuh=("estimasi_sembuh_harian", "sum"),
+        )
+        .sort_values("tahun")
+    )
+
+
 def get_simulation_initial_values(
-    data: pd.DataFrame, year: int = SIMULATION_YEAR
-) -> Tuple[float, float, float, float]:
+    data: pd.DataFrame, year: int = YEAR_SIMULATION
+) -> tuple[float, float, float, float]:
     """Mengambil N, S0, I0, dan R0 untuk tahun simulasi."""
     year_data = data[data["tahun"] == year].copy()
     if year_data.empty:

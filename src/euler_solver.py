@@ -1,5 +1,6 @@
 """Penyelesaian model SIR menggunakan Metode Euler."""
 
+import numpy as np
 import pandas as pd
 
 try:
@@ -9,36 +10,35 @@ except ImportError:
 
 
 def euler_sir(
-    n: float,
-    s0: float,
-    i0: float,
-    r0: float,
+    N: float,
+    S0: float,
+    I0: float,
+    R0: float,
     beta: float,
     gamma: float,
     h: float,
     t_max: int,
 ) -> pd.DataFrame:
-    """Menjalankan simulasi SIR dengan Metode Euler."""
+    """Menjalankan simulasi SIR dengan Metode Euler.
+
+    Jika h = 0.5, kolom hari akan berisi 0, 0.5, 1.0, 1.5, dan seterusnya.
+    """
     if h <= 0:
         raise ValueError("Nilai h harus lebih besar dari 0.")
     if t_max < 0:
         raise ValueError("Nilai t_max tidak boleh negatif.")
 
-    results = [{"hari": 0, "S": s0, "I": i0, "R": r0}]
-    s, i, r = s0, i0, r0
+    time_points = np.arange(0, t_max + h, h)
+    S, I, R = S0, I0, R0
+    results = [{"hari": float(time_points[0]), "S": S, "I": I, "R": R}]
 
-    for day in range(1, t_max + 1):
-        ds_dt, di_dt, dr_dt = sir_derivatives(s, i, r, n, beta, gamma)
+    for day in time_points[1:]:
+        dS_dt, dI_dt, dR_dt = sir_derivatives(S, I, R, beta, gamma, N)
 
-        s = s + h * ds_dt
-        i = i + h * di_dt
-        r = r + h * dr_dt
+        S = max(S + h * dS_dt, 0)
+        I = max(I + h * dI_dt, 0)
+        R = max(R + h * dR_dt, 0)
 
-        # Kompartemen tidak boleh negatif secara makna epidemiologis.
-        s = max(s, 0)
-        i = max(i, 0)
-        r = max(r, 0)
-
-        results.append({"hari": day, "S": s, "I": i, "R": r})
+        results.append({"hari": float(day), "S": S, "I": I, "R": R})
 
     return pd.DataFrame(results)
